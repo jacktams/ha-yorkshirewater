@@ -91,7 +91,7 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
 
             # Get last recorded statistic to avoid duplicates
             last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, usage_statistic_id, True, set()
+                get_last_statistics, self.hass, 1, usage_statistic_id, True, {"sum"}
             )
 
             if not last_stat:
