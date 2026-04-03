@@ -73,27 +73,33 @@ async def async_setup_entry(
         end = date.fromisoformat(str(call.data["end_date"]))
         days = (end - start).days
 
-        _LOGGER.debug("Force refresh: %s to %s (%d days)", start, end, days)
+        _LOGGER.warning("Force refresh: %s to %s (%d days)", start, end, days)
 
         account_ref = entry.data[CONF_ACCOUNT_NUMBER]
         meter_data = await coordinator.api.api.get_meter_details(account_ref)
         meter_ref = meter_data["meterReference"]
+        _LOGGER.warning("Force refresh: meter_ref=%s", meter_ref)
 
         consumption = await coordinator.api.api.get_daily_consumption(
             meter_ref, start, end
+        )
+        daily_data = consumption.get("dailyUsageData", [])
+        _LOGGER.warning(
+            "Force refresh: API returned %d readings", len(daily_data)
         )
 
         if meter_ref not in coordinator.api.meters:
             from .pyyorkshirewater.meter import SmartMeter
             coordinator.api.meters[meter_ref] = SmartMeter(meter_ref)
-        coordinator.api.meters[meter_ref].update_reading_cache(
-            consumption.get("dailyUsageData", [])
+        coordinator.api.meters[meter_ref].update_reading_cache(daily_data)
+        _LOGGER.warning(
+            "Force refresh: meter cache now has %d readings",
+            len(coordinator.api.meters[meter_ref].readings),
         )
 
         await coordinator._insert_statistics(ignore_existing=True)
-        _LOGGER.info(
-            "Force refresh complete: %d readings fetched",
-            len(consumption.get("dailyUsageData", [])),
+        _LOGGER.warning(
+            "Force refresh complete: %d readings fetched", len(daily_data)
         )
 
     hass.services.async_register(
