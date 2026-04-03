@@ -102,6 +102,7 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 name=f"{name_prefix} Cost",
                 source=DOMAIN,
                 statistic_id=cost_statistic_id,
+                unit_class="monetary",
                 unit_of_measurement="GBP",
             )
 
