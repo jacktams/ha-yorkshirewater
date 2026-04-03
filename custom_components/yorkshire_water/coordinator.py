@@ -83,14 +83,10 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
 
             _LOGGER.debug("Updating statistics for meter %s", meter.serial_number)
 
-            name_prefix = (
-                f"Yorkshire Water {self.config_entry.data[CONF_ACCOUNT_NUMBER]} "
-                f"{meter.serial_number}"
-            )
             usage_metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.NONE,
                 has_sum=True,
-                name=f"{name_prefix} Usage",
+                name=f"Water Usage {meter.serial_number}",
                 source=DOMAIN,
                 statistic_id=usage_statistic_id,
                 unit_class=VolumeConverter.UNIT_CLASS,
@@ -99,7 +95,7 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
             cost_metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.NONE,
                 has_sum=True,
-                name=f"{name_prefix} Cost",
+                name=f"Water Cost {meter.serial_number}",
                 source=DOMAIN,
                 statistic_id=cost_statistic_id,
                 unit_class="monetary",
