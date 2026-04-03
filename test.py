@@ -6,8 +6,8 @@ import os
 
 import aiohttp
 
-from pyyorkshirewater import YorkshireWater
-from pyyorkshirewater.auth import YorkshireWaterAuth
+from custom_components.yorkshire_water.pyyorkshirewater import YorkshireWater
+from custom_components.yorkshire_water.pyyorkshirewater.auth import YorkshireWaterAuth
 
 
 async def main():
