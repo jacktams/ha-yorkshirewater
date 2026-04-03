@@ -151,8 +151,13 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     _LOGGER.debug("Could not parse date %s, skipping", reading_date)
                     continue
 
-                litres = float(reading.get("totalConsumptionLitres", 0))
-                cost = float(reading.get("totalCostIncludingSewerage", 0))
+                raw_litres = reading.get("totalConsumptionLitres")
+                raw_cost = reading.get("totalCostIncludingSewerage")
+                if raw_litres is None or raw_cost is None:
+                    _LOGGER.debug("Skipping %s: missing consumption or cost data", reading_date)
+                    continue
+                litres = float(raw_litres)
+                cost = float(raw_cost)
                 ts = start.timestamp()
 
                 if last_stats_time is None or ts > last_stats_time:
