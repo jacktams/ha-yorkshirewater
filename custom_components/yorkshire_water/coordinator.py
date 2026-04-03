@@ -20,6 +20,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
+from homeassistant.util.unit_conversion import VolumeConverter
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -84,6 +85,7 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 name=f"{name_prefix} Usage",
                 source=DOMAIN,
                 statistic_id=usage_statistic_id,
+                unit_class=VolumeConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfVolume.LITERS,
             )
 

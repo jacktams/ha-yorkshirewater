@@ -1,6 +1,6 @@
 """Smart meter data model."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 
 class SmartMeter:
@@ -59,7 +59,10 @@ class SmartMeter:
         """Return the date of the most recent reading."""
         if not self.readings:
             return None
-        return datetime.fromisoformat(self.readings[-1]["date"])
+        dt = datetime.fromisoformat(self.readings[-1]["date"])
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
 
     def to_dict(self) -> dict:
         """Serialize to dict."""
