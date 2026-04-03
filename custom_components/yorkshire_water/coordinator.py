@@ -66,12 +66,20 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed from err
 
     async def _insert_statistics(self) -> None:
-        """Insert daily consumption statistics into Home Assistant."""
+        """Insert daily consumption and cost statistics into Home Assistant."""
+        _LOGGER.debug(
+            "insert_statistics called, meters: %s",
+            list(self.api.meters.keys()),
+        )
         for meter in self.api.meters.values():
+            _LOGGER.debug(
+                "Meter %s has %d readings", meter.serial_number, len(meter.readings)
+            )
             id_prefix = (
                 f"{self.config_entry.data[CONF_ACCOUNT_NUMBER]}_{meter.serial_number}"
             )
             usage_statistic_id = f"{DOMAIN}:{id_prefix}_usage".lower()
+            cost_statistic_id = f"{DOMAIN}:{id_prefix}_cost".lower()
 
             _LOGGER.debug("Updating statistics for meter %s", meter.serial_number)
 
@@ -88,21 +96,41 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 unit_class=VolumeConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfVolume.LITERS,
             )
-
-            # Get last recorded statistic to avoid duplicates
-            last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, usage_statistic_id, True, {"sum"}
+            cost_metadata = StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=f"{name_prefix} Cost",
+                source=DOMAIN,
+                statistic_id=cost_statistic_id,
+                unit_of_measurement="GBP",
             )
 
-            if not last_stat or not last_stat.get(usage_statistic_id):
+            # Get last recorded statistics to avoid duplicates
+            last_usage_stat = await get_instance(self.hass).async_add_executor_job(
+                get_last_statistics, self.hass, 1, usage_statistic_id, True, {"sum"}
+            )
+            last_cost_stat = await get_instance(self.hass).async_add_executor_job(
+                get_last_statistics, self.hass, 1, cost_statistic_id, True, {"sum"}
+            )
+
+            _LOGGER.debug("last_usage_stat: %s", last_usage_stat)
+            if not last_usage_stat or not last_usage_stat.get(usage_statistic_id):
                 usage_sum = 0.0
                 last_stats_time = None
+                _LOGGER.debug("No existing usage stats, starting fresh")
             else:
-                stats = last_stat[usage_statistic_id]
+                stats = last_usage_stat[usage_statistic_id]
                 usage_sum = float(stats[0].get("sum", 0))
                 last_stats_time = stats[0].get("start")
 
+            if not last_cost_stat or not last_cost_stat.get(cost_statistic_id):
+                cost_sum = 0.0
+            else:
+                stats = last_cost_stat[cost_statistic_id]
+                cost_sum = float(stats[0].get("sum", 0))
+
             usage_statistics = []
+            cost_statistics = []
             for reading in meter.readings:
                 reading_date = reading.get("date")
                 if not reading_date:
@@ -126,7 +154,9 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     continue
 
                 litres = float(reading.get("totalConsumptionLitres", 0))
+                cost = float(reading.get("totalCostIncludingSewerage", 0))
                 usage_sum += litres
+                cost_sum += cost
 
                 usage_statistics.append(
                     StatisticData(
@@ -135,13 +165,29 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                         sum=usage_sum,
                     )
                 )
+                cost_statistics.append(
+                    StatisticData(
+                        start=start,
+                        state=cost,
+                        sum=cost_sum,
+                    )
+                )
 
             if usage_statistics:
                 _LOGGER.debug(
-                    "Adding %s statistics for %s",
+                    "Adding %s usage statistics for %s",
                     len(usage_statistics),
                     usage_statistic_id,
                 )
                 async_add_external_statistics(
                     self.hass, usage_metadata, usage_statistics
+                )
+            if cost_statistics:
+                _LOGGER.debug(
+                    "Adding %s cost statistics for %s",
+                    len(cost_statistics),
+                    cost_statistic_id,
+                )
+                async_add_external_statistics(
+                    self.hass, cost_metadata, cost_statistics
                 )
