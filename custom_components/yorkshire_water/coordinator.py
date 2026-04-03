@@ -125,9 +125,11 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
 
             if not last_cost_stat or not last_cost_stat.get(cost_statistic_id):
                 cost_sum = 0.0
+                last_cost_stats_time = None
             else:
                 stats = last_cost_stat[cost_statistic_id]
                 cost_sum = float(stats[0].get("sum", 0))
+                last_cost_stats_time = stats[0].get("start")
 
             usage_statistics = []
             cost_statistics = []
@@ -149,29 +151,29 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     _LOGGER.debug("Could not parse date %s, skipping", reading_date)
                     continue
 
-                # Skip if we already have this date
-                if last_stats_time is not None and start.timestamp() <= last_stats_time:
-                    continue
-
                 litres = float(reading.get("totalConsumptionLitres", 0))
                 cost = float(reading.get("totalCostIncludingSewerage", 0))
-                usage_sum += litres
-                cost_sum += cost
+                ts = start.timestamp()
 
-                usage_statistics.append(
-                    StatisticData(
-                        start=start,
-                        state=litres,
-                        sum=usage_sum,
+                if last_stats_time is None or ts > last_stats_time:
+                    usage_sum += litres
+                    usage_statistics.append(
+                        StatisticData(
+                            start=start,
+                            state=litres,
+                            sum=usage_sum,
+                        )
                     )
-                )
-                cost_statistics.append(
-                    StatisticData(
-                        start=start,
-                        state=cost,
-                        sum=cost_sum,
+
+                if last_cost_stats_time is None or ts > last_cost_stats_time:
+                    cost_sum += cost
+                    cost_statistics.append(
+                        StatisticData(
+                            start=start,
+                            state=cost,
+                            sum=cost_sum,
+                        )
                     )
-                )
 
             if usage_statistics:
                 _LOGGER.debug(
