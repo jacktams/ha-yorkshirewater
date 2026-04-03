@@ -3,11 +3,14 @@
 import asyncio
 import json
 import os
+import sys
 
 import aiohttp
 
-from custom_components.yorkshire_water.pyyorkshirewater import YorkshireWater
-from custom_components.yorkshire_water.pyyorkshirewater.auth import YorkshireWaterAuth
+# Allow importing the library directly without triggering the HA integration
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "custom_components", "yorkshire_water"))
+from pyyorkshirewater import YorkshireWater
+from pyyorkshirewater.auth import YorkshireWaterAuth
 
 
 async def main():
