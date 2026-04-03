@@ -94,13 +94,13 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 get_last_statistics, self.hass, 1, usage_statistic_id, True, {"sum"}
             )
 
-            if not last_stat:
+            if not last_stat or not last_stat.get(usage_statistic_id):
                 usage_sum = 0.0
                 last_stats_time = None
             else:
-                stats = last_stat.get(usage_statistic_id, [])
-                usage_sum = float(stats[0]["sum"]) if stats else 0.0
-                last_stats_time = stats[0]["start"] if stats else None
+                stats = last_stat[usage_statistic_id]
+                usage_sum = float(stats[0].get("sum", 0))
+                last_stats_time = stats[0].get("start")
 
             usage_statistics = []
             for reading in meter.readings:
