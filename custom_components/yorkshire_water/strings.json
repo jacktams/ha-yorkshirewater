@@ -44,6 +44,22 @@
       }
     }
   },
+  "services": {
+    "force_refresh": {
+      "name": "Force refresh",
+      "description": "Fetch consumption data for a specific date range and insert statistics.",
+      "fields": {
+        "start_date": {
+          "name": "Start date",
+          "description": "Start date (YYYY-MM-DD)"
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "End date (YYYY-MM-DD)"
+        }
+      }
+    }
+  },
   "exceptions": {
     "auth_expired": {
       "message": "Authentication token expired"

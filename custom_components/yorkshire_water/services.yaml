@@ -1,0 +1,18 @@
+force_refresh:
+  name: Force refresh
+  description: Fetch consumption data for a specific date range and insert statistics.
+  fields:
+    start_date:
+      name: Start date
+      description: Start date (YYYY-MM-DD)
+      required: true
+      example: "2021-09-10"
+      selector:
+        date:
+    end_date:
+      name: End date
+      description: End date (YYYY-MM-DD)
+      required: true
+      example: "2026-04-03"
+      selector:
+        date:
