@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "smart_meter_unavailable": "This account does not have a smart meter associated with it. Please check your account reference number.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "account_number": "Account reference"
+        },
+        "data_description": {
+          "username": "Email address used to log in to the Yorkshire Water website.",
+          "password": "Your Yorkshire Water password.",
+          "account_number": "Your billing account reference number."
+        },
+        "description": "Enter your Yorkshire Water account credentials to connect to Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_consumption": {
+        "name": "Latest daily usage"
+      },
+      "latest_cost": {
+        "name": "Latest daily cost"
+      },
+      "yesterday_consumption": {
+        "name": "Yesterday's usage"
+      },
+      "yesterday_cost": {
+        "name": "Yesterday's cost"
+      },
+      "last_updated": {
+        "name": "Last reading date"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_expired": {
+      "message": "Authentication token expired"
+    },
+    "service_unavailable": {
+      "message": "Yorkshire Water services are currently unavailable."
+    },
+    "smart_meter_unavailable": {
+      "message": "This account does not have a smart meter associated with it."
+    }
+  }
+}

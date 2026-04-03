@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect.",
+      "invalid_auth": "Invalid authentication.",
+      "smart_meter_unavailable": "This account does not have a smart meter associated with it. Please check your account reference number.",
+      "unknown": "An unexpected error occurred."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "account_number": "Account reference"
+        },
+        "data_description": {
+          "username": "Email address used to log in to the Yorkshire Water website.",
+          "password": "Your Yorkshire Water password.",
+          "account_number": "Your billing account reference number."
+        },
+        "description": "Enter your Yorkshire Water account credentials to connect to Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_consumption": {
+        "name": "Latest daily usage"
+      },
+      "latest_cost": {
+        "name": "Latest daily cost"
+      },
+      "yesterday_consumption": {
+        "name": "Yesterday's usage"
+      },
+      "yesterday_cost": {
+        "name": "Yesterday's cost"
+      },
+      "last_updated": {
+        "name": "Last reading date"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_expired": {
+      "message": "Authentication token expired"
+    },
+    "service_unavailable": {
+      "message": "Yorkshire Water services are currently unavailable."
+    },
+    "smart_meter_unavailable": {
+      "message": "This account does not have a smart meter associated with it."
+    }
+  }
+}
