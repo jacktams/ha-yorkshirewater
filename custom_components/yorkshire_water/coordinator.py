@@ -65,7 +65,7 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         except (AuthError, ApiError) as err:
             raise UpdateFailed from err
 
-    async def _insert_statistics(self) -> None:
+    async def _insert_statistics(self, ignore_existing: bool = False) -> None:
         """Insert daily consumption and cost statistics into Home Assistant."""
         _LOGGER.debug(
             "insert_statistics called, meters: %s",
@@ -113,23 +113,30 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 get_last_statistics, self.hass, 1, cost_statistic_id, True, {"sum"}
             )
 
-            _LOGGER.debug("last_usage_stat: %s", last_usage_stat)
-            if not last_usage_stat or not last_usage_stat.get(usage_statistic_id):
+            if ignore_existing:
                 usage_sum = 0.0
-                last_stats_time = None
-                _LOGGER.debug("No existing usage stats, starting fresh")
-            else:
-                stats = last_usage_stat[usage_statistic_id]
-                usage_sum = float(stats[0].get("sum", 0))
-                last_stats_time = stats[0].get("start")
-
-            if not last_cost_stat or not last_cost_stat.get(cost_statistic_id):
                 cost_sum = 0.0
+                last_stats_time = None
                 last_cost_stats_time = None
+                _LOGGER.debug("Ignoring existing stats (force refresh)")
             else:
-                stats = last_cost_stat[cost_statistic_id]
-                cost_sum = float(stats[0].get("sum", 0))
-                last_cost_stats_time = stats[0].get("start")
+                _LOGGER.debug("last_usage_stat: %s", last_usage_stat)
+                if not last_usage_stat or not last_usage_stat.get(usage_statistic_id):
+                    usage_sum = 0.0
+                    last_stats_time = None
+                    _LOGGER.debug("No existing usage stats, starting fresh")
+                else:
+                    stats = last_usage_stat[usage_statistic_id]
+                    usage_sum = float(stats[0].get("sum", 0))
+                    last_stats_time = stats[0].get("start")
+
+                if not last_cost_stat or not last_cost_stat.get(cost_statistic_id):
+                    cost_sum = 0.0
+                    last_cost_stats_time = None
+                else:
+                    stats = last_cost_stat[cost_statistic_id]
+                    cost_sum = float(stats[0].get("sum", 0))
+                    last_cost_stats_time = stats[0].get("start")
 
             usage_statistics = []
             cost_statistics = []

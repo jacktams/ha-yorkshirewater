@@ -90,7 +90,7 @@ async def async_setup_entry(
             consumption.get("dailyUsageData", [])
         )
 
-        await coordinator._insert_statistics()
+        await coordinator._insert_statistics(ignore_existing=True)
         _LOGGER.info(
             "Force refresh complete: %d readings fetched",
             len(consumption.get("dailyUsageData", [])),
