@@ -108,11 +108,15 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 if not reading_date:
                     continue
 
-                # Parse the date string (YYYY-MM-DD) and set to start of day
+                # Parse the date string (YYYY-MM-DD) as a local date
+                # The reading represents the full day's usage, so place it
+                # at 23:00 local time (end of day hourly bucket)
                 try:
-                    start = dt_util.as_local(
-                        datetime.fromisoformat(reading_date)
-                    ).replace(hour=0, minute=0, second=0, microsecond=0)
+                    local_tz = dt_util.get_default_time_zone()
+                    start = datetime.fromisoformat(reading_date).replace(
+                        hour=23, minute=0, second=0, microsecond=0,
+                        tzinfo=local_tz,
+                    )
                 except ValueError:
                     _LOGGER.debug("Could not parse date %s, skipping", reading_date)
                     continue
