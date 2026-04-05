@@ -16,7 +16,6 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
-    clear_statistics,
     get_last_statistics,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -113,15 +112,12 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
             )
 
             if replace:
-                # Clear existing statistics before re-inserting
-                _LOGGER.warning("Clearing existing statistics for %s", meter.serial_number)
-                await get_instance(self.hass).async_add_executor_job(
-                    clear_statistics, get_instance(self.hass), [usage_id, cost_id]
-                )
+                # Re-insert all readings, overwriting existing entries
                 usage_sum = 0.0
                 cost_sum = 0.0
                 last_stats_time = None
                 last_cost_stats_time = None
+                _LOGGER.warning("Replace mode: re-inserting all statistics for %s", meter.serial_number)
             else:
                 # Get last recorded statistics to avoid duplicates
                 last_usage_stat = await get_instance(self.hass).async_add_executor_job(
