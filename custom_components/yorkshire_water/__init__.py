@@ -97,7 +97,7 @@ async def async_setup_entry(
             len(coordinator.api.meters[meter_ref].readings),
         )
 
-        await coordinator._insert_statistics(ignore_existing=True)
+        await coordinator._insert_statistics(replace=True)
         _LOGGER.warning(
             "Force refresh complete: %d readings fetched", len(daily_data)
         )
