@@ -91,7 +91,6 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
             name=STAT_NAME_COST.format(serial=meter_serial),
             source=DOMAIN,
             statistic_id=cost_id,
-            unit_class="monetary",
             unit_of_measurement="GBP",
         )
         return usage_id, cost_id, usage_meta, cost_meta
