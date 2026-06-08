@@ -11,6 +11,7 @@ from aiohttp import CookieJar
 from .pyyorkshirewater import YorkshireWater
 from .pyyorkshirewater.auth import YorkshireWaterAuth
 from .pyyorkshirewater.exceptions import AuthError, ApiError
+from .pyyorkshirewater.utils import parse_meter_move_dates
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -78,10 +79,11 @@ async def async_setup_entry(
         account_ref = entry.data[CONF_ACCOUNT_NUMBER]
         meter_data = await coordinator.api.api.get_meter_details(account_ref)
         meter_ref = meter_data["meterReference"]
+        move_in_date, move_out_date = parse_meter_move_dates(meter_data)
         _LOGGER.warning("Force refresh: meter_ref=%s", meter_ref)
 
         consumption = await coordinator.api.api.get_daily_consumption(
-            meter_ref, start, end
+            meter_ref, start, end, move_in_date, move_out_date
         )
         daily_data = consumption.get("dailyUsageData", [])
         _LOGGER.warning(

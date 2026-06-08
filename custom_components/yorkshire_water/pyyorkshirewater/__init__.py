@@ -8,6 +8,7 @@ from typing import Callable
 from .api import API
 from .auth import YorkshireWaterAuth
 from .meter import SmartMeter
+from .utils import parse_meter_move_dates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,12 +30,13 @@ class YorkshireWater:
         # Get meter details
         meter_data = await self.api.get_meter_details(account_reference)
         meter_reference = meter_data["meterReference"]
+        move_in_date, move_out_date = parse_meter_move_dates(meter_data)
 
         # Fetch daily consumption
         end_date = date.today()
         start_date = end_date - timedelta(days=days)
         consumption = await self.api.get_daily_consumption(
-            meter_reference, start_date, end_date
+            meter_reference, start_date, end_date, move_in_date, move_out_date
         )
 
         # Update meter cache

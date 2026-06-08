@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+from datetime import date, datetime
 
 
 def generate_pkce_pair() -> tuple[str, str]:
@@ -27,6 +28,19 @@ def decode_jwt(token: str) -> dict:
         payload += "=" * padding
     decoded = base64.urlsafe_b64decode(payload)
     return json.loads(decoded)
+
+
+def parse_meter_move_dates(meter_data: dict) -> tuple[date, date]:
+    """Extract move-in/out dates from meter_details.
+
+    The API returns endDate as 0001-01-01 for meters that haven't been moved
+    out of; in that case the web app sends today as moveOutDate.
+    """
+    move_in = datetime.fromisoformat(meter_data["startDate"]).date()
+    move_out_raw = datetime.fromisoformat(meter_data["endDate"]).date()
+    if move_out_raw.year < 1900:
+        move_out_raw = date.today()
+    return move_in, move_out_raw
 
 
 def extract_csrf_token(html: str) -> str:

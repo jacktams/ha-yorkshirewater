@@ -33,6 +33,8 @@ class API:
         meter_reference: str,
         start_date: date,
         end_date: date,
+        move_in_date: date,
+        move_out_date: date,
         time_period: TimePeriod = TimePeriod.DAILY,
     ) -> dict:
         """Get daily consumption data for a meter."""
@@ -43,6 +45,8 @@ class API:
                 "meterReference": meter_reference,
                 "startDate": start_date.isoformat(),
                 "endDate": end_date.isoformat(),
+                "moveInDate": move_in_date.isoformat(),
+                "moveOutDate": move_out_date.isoformat(),
                 "timePeriod": time_period.value,
             },
         )
