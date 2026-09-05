@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import logging
 
 from .pyyorkshirewater import YorkshireWater
@@ -31,6 +31,10 @@ type YorkshireWaterConfigEntry = ConfigEntry[YorkshireWaterUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=60)
+
+# On first setup there are no statistics to gap-fill from, so seed a year of
+# history. After that, HA's own last-recorded statistic drives the window.
+INITIAL_BACKFILL_DAYS = 365
 
 STAT_NAME_USAGE = "Water Usage {serial}"
 STAT_NAME_COST = "Water Cost {serial}"
@@ -62,11 +66,29 @@ class YorkshireWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.api.update(
                 self.config_entry.data[CONF_ACCOUNT_NUMBER],
-                days=7,
+                resolve_start_date=self._resolve_start_date,
             )
             await self._insert_statistics()
         except (AuthError, ApiError) as err:
             raise UpdateFailed from err
+
+    async def _resolve_start_date(self, meter_serial: str) -> date:
+        """Start the fetch from the last statistic already stored in HA.
+
+        Returns the local date of the most recent recorded usage statistic so
+        the window backfills any gap since the last successful poll. When no
+        statistics exist yet (first setup) it seeds a year of history.
+        """
+        usage_id, _, _, _ = self._build_metadata(meter_serial)
+        last_stat = await get_instance(self.hass).async_add_executor_job(
+            get_last_statistics, self.hass, 1, usage_id, True, {"sum"}
+        )
+        if last_stat and last_stat.get(usage_id):
+            start_ts = last_stat[usage_id][0].get("start")
+            if start_ts is not None:
+                local_tz = dt_util.get_default_time_zone()
+                return dt_util.utc_from_timestamp(start_ts).astimezone(local_tz).date()
+        return dt_util.now().date() - timedelta(days=INITIAL_BACKFILL_DAYS)
 
     def _build_metadata(self, meter_serial: str) -> tuple[str, str, StatisticMetaData, StatisticMetaData]:
         """Build statistic IDs and metadata for a meter."""

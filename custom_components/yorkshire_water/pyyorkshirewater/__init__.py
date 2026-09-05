@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from datetime import date, timedelta
-from typing import Callable
+from typing import Awaitable, Callable
 
 from .api import API
 from .auth import YorkshireWaterAuth
@@ -25,8 +25,16 @@ class YorkshireWater:
         self,
         account_reference: str,
         days: int = 7,
+        resolve_start_date: Callable[[str], Awaitable[date]] | None = None,
     ) -> dict:
-        """Fetch meter details and recent daily consumption, update meter cache."""
+        """Fetch meter details and recent daily consumption, update meter cache.
+
+        The fetch window ends today. Its start is either ``days`` before today
+        (the default) or, when ``resolve_start_date`` is supplied, whatever date
+        that callback returns for the resolved meter reference. The coordinator
+        uses the callback to start from the last statistic already stored in
+        Home Assistant so gaps since the last successful poll are backfilled.
+        """
         # Get meter details
         meter_data = await self.api.get_meter_details(account_reference)
         meter_reference = meter_data["meterReference"]
@@ -34,7 +42,12 @@ class YorkshireWater:
 
         # Fetch daily consumption
         end_date = date.today()
-        start_date = end_date - timedelta(days=days)
+        if resolve_start_date is not None:
+            start_date = await resolve_start_date(meter_reference)
+            if start_date > end_date:
+                start_date = end_date
+        else:
+            start_date = end_date - timedelta(days=days)
         consumption = await self.api.get_daily_consumption(
             meter_reference, start_date, end_date, move_in_date, move_out_date
         )
